@@ -20,6 +20,7 @@ const CLIENT_STATUS_LABEL: Record<string, string> = {
   SECOND_APPOINTMENT: "2nd Meeting",
   PENDING:            "Pending",
   CLOSED:             "Closed",
+  BLNT:               "BLNT",
 };
 
 const CLIENT_STATUS_STYLE: Record<string, string> = {
@@ -28,9 +29,10 @@ const CLIENT_STATUS_STYLE: Record<string, string> = {
   SECOND_APPOINTMENT: "bg-amber-100 text-amber-700",
   PENDING:            "bg-purple-100 text-purple-700",
   CLOSED:             "bg-ok-ghost text-ok-dim",
+  BLNT:               "bg-red-100 text-red-700",
 };
 
-const VALID_STATUSES = ["NEW", "FIRST_APPOINTMENT", "SECOND_APPOINTMENT", "PENDING", "CLOSED"] as const;
+const VALID_STATUSES = ["NEW", "FIRST_APPOINTMENT", "SECOND_APPOINTMENT", "PENDING", "CLOSED", "BLNT"] as const;
 type ClientStatus = (typeof VALID_STATUSES)[number];
 
 const VALID_SORTS: SortKey[] = ["name", "status", "assignedTo"];
@@ -64,7 +66,7 @@ export default async function ClientsPage({ searchParams }: Props) {
     : [];
 
   // Stats scoped to the same visibility as the table
-  const [totalCount, newCount, firstApptCount, secondApptCount, pendingCount, awaitingProposalCount, closedCount] =
+  const [totalCount, newCount, firstApptCount, secondApptCount, pendingCount, awaitingProposalCount, closedCount, blntCount] =
     await Promise.all([
       prisma.client.count({ where: scopeFilter }),
       prisma.client.count({ where: { ...scopeFilter, clientStatus: "NEW" } }),
@@ -73,6 +75,7 @@ export default async function ClientsPage({ searchParams }: Props) {
       prisma.client.count({ where: { ...scopeFilter, clientStatus: "PENDING" } }),
       prisma.client.count({ where: { ...scopeFilter, clientStatus: "PENDING", proposalSent: false } }),
       prisma.client.count({ where: { ...scopeFilter, clientStatus: "CLOSED" } }),
+      prisma.client.count({ where: { ...scopeFilter, clientStatus: "BLNT" } }),
     ]);
 
   const where = {
@@ -153,13 +156,14 @@ export default async function ClientsPage({ searchParams }: Props) {
       </div>
 
       {/* ── Stats strip ──────────────────────────────────────── */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 border border-warm-200 bg-white mb-10">
+      <div className="grid grid-cols-3 sm:grid-cols-7 border border-warm-200 bg-white mb-10">
         <ClientStatCell label="Total"      value={totalCount}      active={!statusFilter}                          href={filterLink(null)} />
         <ClientStatCell label="New"        value={newCount}        active={statusFilter === "NEW"}                 href={filterLink("NEW")} border />
         <ClientStatCell label="1st Mtg"    value={firstApptCount}  active={statusFilter === "FIRST_APPOINTMENT"}   href={filterLink("FIRST_APPOINTMENT")} border />
         <ClientStatCell label="2nd Mtg"    value={secondApptCount} active={statusFilter === "SECOND_APPOINTMENT"}  href={filterLink("SECOND_APPOINTMENT")} border />
         <ClientStatCell label="Pending"    value={pendingCount}    active={statusFilter === "PENDING"}             href={filterLink("PENDING")} border />
         <ClientStatCell label="Closed"     value={closedCount}     active={statusFilter === "CLOSED"}              href={filterLink("CLOSED")} border />
+        <ClientStatCell label="BLNT"       value={blntCount}       active={statusFilter === "BLNT"}                href={filterLink("BLNT")} border />
       </div>
 
       {/* ── Awaiting proposal callout ─────────────────────────── */}

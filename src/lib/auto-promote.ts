@@ -8,16 +8,17 @@ import { prisma } from "@/lib/db";
  * SECOND_APPOINTMENT → PENDING            (2nd past event)
  * PENDING → CLOSED                        (project/contract assigned)
  *
- * CLOSED is terminal and is never overridden by event-based rules.
+ * CLOSED and BLNT are terminal and are never overridden by these rules.
+ * BLNT is set manually by the user to mark clients that failed to close.
  * The contract creation action also sets CLOSED immediately on save.
  */
 export async function autoPromoteClients() {
   const now = new Date();
 
-  // 1. CLOSED: any non-CLOSED client with at least one contract
+  // 1. CLOSED: any non-terminal client with at least one contract
   await prisma.client.updateMany({
     where: {
-      clientStatus: { not: "CLOSED" },
+      clientStatus: { notIn: ["CLOSED", "BLNT"] },
       contracts: { some: {} },
     },
     data: { clientStatus: "CLOSED" },

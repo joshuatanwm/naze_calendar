@@ -34,6 +34,7 @@ enum ClientStatus {
   SECOND_APPOINTMENT
   PENDING
   CLOSED
+  BLNT
 }
 
 

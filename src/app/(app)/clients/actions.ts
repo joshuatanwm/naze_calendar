@@ -7,7 +7,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireOwner, requireUser } from "@/lib/permissions";
 
-const CLIENT_STATUSES = ["NEW", "FIRST_APPOINTMENT", "SECOND_APPOINTMENT", "PENDING", "CLOSED"] as const;
+const CLIENT_STATUSES = ["NEW", "FIRST_APPOINTMENT", "SECOND_APPOINTMENT", "PENDING", "CLOSED", "BLNT"] as const;
 
 const clientSchema = z.object({
   name:         z.string().min(1, "Name is required").max(200),

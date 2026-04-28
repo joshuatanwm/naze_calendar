@@ -16,6 +16,7 @@ const CLIENT_STATUS_OPTIONS: { value: ClientStatus; label: string }[] = [
   { value: "SECOND_APPOINTMENT", label: "Second Meeting" },
   { value: "PENDING",            label: "Pending" },
   { value: "CLOSED",             label: "Closed (Engaged)" },
+  { value: "BLNT",               label: "BLNT (Rejected)" },
 ];
 
 export function ClientForm({
