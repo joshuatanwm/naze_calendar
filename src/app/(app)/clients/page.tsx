@@ -20,7 +20,7 @@ const CLIENT_STATUS_LABEL: Record<string, string> = {
   SECOND_APPOINTMENT: "2nd Meeting",
   PENDING:            "Pending",
   CLOSED:             "Closed",
-  BLNT:               "BLNT",
+  BLNT:               "Nice Try",
 };
 
 const CLIENT_STATUS_STYLE: Record<string, string> = {
@@ -163,7 +163,7 @@ export default async function ClientsPage({ searchParams }: Props) {
         <ClientStatCell label="2nd Mtg"    value={secondApptCount} active={statusFilter === "SECOND_APPOINTMENT"}  href={filterLink("SECOND_APPOINTMENT")} border />
         <ClientStatCell label="Pending"    value={pendingCount}    active={statusFilter === "PENDING"}             href={filterLink("PENDING")} border />
         <ClientStatCell label="Closed"     value={closedCount}     active={statusFilter === "CLOSED"}              href={filterLink("CLOSED")} border />
-        <ClientStatCell label="BLNT"       value={blntCount}       active={statusFilter === "BLNT"}                href={filterLink("BLNT")} border />
+        <ClientStatCell label="Nice Try"   value={blntCount}       active={statusFilter === "BLNT"}                href={filterLink("BLNT")} border />
       </div>
 
       {/* ── Awaiting proposal callout ─────────────────────────── */}
