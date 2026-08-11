@@ -111,6 +111,16 @@ export async function syncEventToGoogle(eventId: string) {
   }
 }
 
+export async function removeAssignmentFromGoogle(userId: string, googleEventId: string) {
+  try {
+    const cal = await calendarForUser(userId);
+    if (!cal) return;
+    await cal.events.delete({ calendarId: "primary", eventId: googleEventId });
+  } catch (err) {
+    console.error(`removeAssignmentFromGoogle failed for user ${userId}:`, err);
+  }
+}
+
 export async function deleteEventFromGoogle(eventId: string) {
   const [assignments, ownerSyncs] = await Promise.all([
     prisma.eventAssignment.findMany({ where: { eventId } }),

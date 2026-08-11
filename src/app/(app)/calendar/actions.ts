@@ -7,7 +7,7 @@ import { fromZonedTime } from "date-fns-tz";
 
 import { prisma } from "@/lib/db";
 import { requireOwner, requireUser, requireEventAccess } from "@/lib/permissions";
-import { syncEventToGoogle, deleteEventFromGoogle } from "@/lib/google-calendar";
+import { syncEventToGoogle, deleteEventFromGoogle, removeAssignmentFromGoogle } from "@/lib/google-calendar";
 
 const TZ = "Asia/Singapore";
 
@@ -66,6 +66,15 @@ export async function updateEvent(id: string, formData: FormData) {
   await requireEventAccess(id);
   const data = eventSchema.parse(buildPayload(formData));
 
+  const existingAssignments = await prisma.eventAssignment.findMany({
+    where: { eventId: id },
+    select: { userId: true, googleEventId: true },
+  });
+  const newUserIds = new Set(data.assignedUserIds);
+  const existingUserIds = new Set(existingAssignments.map((a) => a.userId));
+  const toRemove = existingAssignments.filter((a) => !newUserIds.has(a.userId));
+  const toAdd = data.assignedUserIds.filter((userId) => !existingUserIds.has(userId));
+
   await prisma.$transaction(async (tx) => {
     await tx.event.update({
       where: { id },
@@ -78,13 +87,24 @@ export async function updateEvent(id: string, formData: FormData) {
         contractId: clean(data.contractId),
       },
     });
-    await tx.eventAssignment.deleteMany({ where: { eventId: id } });
-    if (data.assignedUserIds.length > 0) {
+    if (toRemove.length > 0) {
+      await tx.eventAssignment.deleteMany({
+        where: { eventId: id, userId: { in: toRemove.map((a) => a.userId) } },
+      });
+    }
+    if (toAdd.length > 0) {
       await tx.eventAssignment.createMany({
-        data: data.assignedUserIds.map((userId) => ({ eventId: id, userId })),
+        data: toAdd.map((userId) => ({ eventId: id, userId })),
       });
     }
   });
+
+  for (const { userId, googleEventId } of toRemove) {
+    if (googleEventId) {
+      removeAssignmentFromGoogle(userId, googleEventId).catch(console.error);
+    }
+  }
+
   revalidatePath("/calendar");
   revalidatePath(`/calendar/${id}`);
   revalidatePath("/");
