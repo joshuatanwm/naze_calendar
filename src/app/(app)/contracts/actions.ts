@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
@@ -171,7 +172,7 @@ export async function clearPaymentDue(milestoneId: string) {
   revalidatePath(`/contracts/${m.contractId}`);
   revalidatePath("/calendar");
   revalidatePath("/");
-  deleteMilestoneFromGoogle(milestoneId).catch(console.error);
+  after(() => deleteMilestoneFromGoogle(milestoneId).catch(console.error));
 }
 
 export async function markPaymentDue(milestoneId: string) {
@@ -192,7 +193,7 @@ export async function markPaymentDue(milestoneId: string) {
   revalidatePath(`/contracts/${m.contractId}`);
   revalidatePath("/calendar");
   revalidatePath("/");
-  syncMilestoneToGoogle(milestoneId).catch(console.error);
+  after(() => syncMilestoneToGoogle(milestoneId).catch(console.error));
 }
 
 export async function togglePayment(milestoneId: string, formData: FormData) {
@@ -221,9 +222,9 @@ export async function togglePayment(milestoneId: string, formData: FormData) {
   revalidatePath("/");
   revalidatePath("/contracts");
   if (paid === "true") {
-    deleteMilestoneFromGoogle(milestoneId).catch(console.error);
+    after(() => deleteMilestoneFromGoogle(milestoneId).catch(console.error));
   } else {
-    syncMilestoneToGoogle(milestoneId).catch(console.error);
+    after(() => syncMilestoneToGoogle(milestoneId).catch(console.error));
   }
 }
 

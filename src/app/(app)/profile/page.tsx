@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
-import { updateProfile, changePassword, disconnectGoogle } from "./actions";
+import { updateProfile, changePassword, disconnectGoogle, resyncGoogleCalendar } from "./actions";
 
 type Props = {
-  searchParams: Promise<{ success?: string; error?: string }>;
+  searchParams: Promise<{ success?: string; error?: string; events?: string; milestones?: string }>;
 };
 
 export default async function ProfilePage({ searchParams }: Props) {
   const user = await requireUser();
-  const { success, error } = await searchParams;
+  const { success, error, events, milestones } = await searchParams;
 
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
@@ -72,6 +72,13 @@ export default async function ProfilePage({ searchParams }: Props) {
             Google Calendar connected successfully.
           </p>
         )}
+        {success === "google_resync" && (
+          <p className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+            {Number(events ?? 0) + Number(milestones ?? 0) > 0
+              ? "Synced " + events + " event(s) and " + milestones + " payment date(s) to your Google Calendar."
+              : "Everything upcoming is already on your Google Calendar."}
+          </p>
+        )}
         {success === "google_disconnected" && (
           <p className="rounded-md bg-brand-50 px-4 py-3 text-sm text-brand-700">
             Google Calendar disconnected.
@@ -79,13 +86,16 @@ export default async function ProfilePage({ searchParams }: Props) {
         )}
         <p className="text-sm text-warm-600">
           {googleConnected
-            ? "Your Google Calendar is connected. Events and payment milestones assigned to you will sync automatically."
+            ? "Your Google Calendar is connected. Events and payment milestones assigned to you sync automatically. Use “Sync upcoming events now” if something is missing."
             : "Connect your Google Calendar to automatically receive events and payment due dates."}
         </p>
         <div className="flex items-center gap-3">
           {googleConnected ? (
             <>
               <span className="text-sm text-green-700 font-medium">● Connected</span>
+              <form action={resyncGoogleCalendar}>
+                <button type="submit" className="btn-secondary text-sm">Sync upcoming events now</button>
+              </form>
               <form action={disconnectGoogle}>
                 <button type="submit" className="btn-secondary text-sm">Disconnect</button>
               </form>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fromZonedTime } from "date-fns-tz";
@@ -58,7 +59,7 @@ export async function createEvent(formData: FormData) {
   });
   revalidatePath("/calendar");
   revalidatePath("/");
-  syncEventToGoogle(event.id).catch(console.error);
+  after(() => syncEventToGoogle(event.id).catch(console.error));
   redirect(`/calendar/${event.id}`);
 }
 
@@ -101,14 +102,14 @@ export async function updateEvent(id: string, formData: FormData) {
 
   for (const { userId, googleEventId } of toRemove) {
     if (googleEventId) {
-      removeAssignmentFromGoogle(userId, googleEventId).catch(console.error);
+      after(() => removeAssignmentFromGoogle(userId, googleEventId).catch(console.error));
     }
   }
 
   revalidatePath("/calendar");
   revalidatePath(`/calendar/${id}`);
   revalidatePath("/");
-  syncEventToGoogle(id).catch(console.error);
+  after(() => syncEventToGoogle(id).catch(console.error));
   redirect(`/calendar/${id}`);
 }
 

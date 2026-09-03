@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/permissions";
 import { signOut } from "@/lib/auth";
+import { backfillUserCalendar } from "@/lib/google-calendar";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -43,6 +44,14 @@ export async function disconnectGoogle() {
     data: { googleRefreshToken: null },
   });
   redirect("/profile?success=google_disconnected");
+}
+
+export async function resyncGoogleCalendar() {
+  const user = await requireUser();
+  const { events, milestones } = await backfillUserCalendar(user.id);
+  redirect(
+    "/profile?success=google_resync&events=" + events + "&milestones=" + milestones
+  );
 }
 
 export async function changePassword(formData: FormData) {

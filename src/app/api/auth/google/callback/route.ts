@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { google } from "googleapis";
 import { prisma } from "@/lib/db";
+import { backfillUserCalendar } from "@/lib/google-calendar";
 
 function oauthClient() {
   return new google.auth.OAuth2(
@@ -33,6 +34,10 @@ export async function GET(req: NextRequest) {
       where: { id: userId },
       data: { googleRefreshToken: tokens.refresh_token },
     });
+
+    // Events created before this moment were never pushed to this user, so
+    // send everything upcoming now rather than making them wait for the next edit.
+    after(() => backfillUserCalendar(userId).catch(console.error));
 
     return NextResponse.redirect(`${base()}/profile?success=google_connected`);
   } catch {
